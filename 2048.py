@@ -1,5 +1,6 @@
 # Imports
 import random
+import os
 
 
 # Seeding the random number generator for consistent results
@@ -35,6 +36,8 @@ class Game:
     def loop(self):
         self.game_running = True
         while self.game_running:
+            os.system("cls")
+            self.storage.show_state()
             print("Do a move: ", self.moves)
             print("Anything else exits")
             move = input()
@@ -51,8 +54,12 @@ class Game:
                 self.game_running = False
                 break
 
+            if self.storage.get_previous_state == self.storage.state:
+                # self.game_over()
+                prnt(f"Game Over: Your Score = {self.storage.score}\n High Score = {self.max_score}")
+
             self.storage.generate_update()
-            self.storage.show_state()
+
 
 # Storage Class
 # current score, state, previous state
@@ -98,7 +105,12 @@ class Storage:
                 if self.state[i][j] == -1:
                     empty_indices.append(i*4+j)
 
-        location = random.choice(empty_indices)
+        try:
+            location = random.choice(empty_indices)
+        except IndexError as error:
+            print("No empty tiles available. Game should now end")
+            # Implement move, will check the previous state comparision then
+            return
 
         self.state[location//4][location % 4] = tile_value
 
