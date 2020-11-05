@@ -1,6 +1,7 @@
 # Imports
 import random
 import os
+from copy import deepcopy
 
 
 # Seeding the random number generator for consistent results
@@ -36,29 +37,40 @@ class Game:
     def loop(self):
         self.game_running = True
         while self.game_running:
-            os.system("cls")
+            # os.system("cls")
             self.storage.show_state()
             print("Do a move: ", self.moves)
-            print("Anything else exits")
+            print(f"Anything else exits...\nScore = {self.storage.get_score()}, High Score = {self.max_score}")
             move = input()
 
             if move == "Up":
-                Move.up(self.storage)
+                score_val = Move.up(self.storage)
             elif move == "Left":
-                Move.left(self.storage)
+                score_val = Move.left(self.storage)
             elif move == "Down":
-                Move.down(self.storage)
+                score_val = Move.down(self.storage)
             elif move == "Right":
-                Move.right(self.storage)
+                score_val = Move.right(self.storage)
+            elif move == "newgame":
+                self.new_game()
             else:
                 self.game_running = False
                 break
 
-            if self.storage.get_previous_state == self.storage.state:
-                # self.game_over()
-                prnt(f"Game Over: Your Score = {self.storage.score}\n High Score = {self.max_score}")
+            # TODO: Implement Undo functionality
+            # TODO: Implement newgame functionality
 
-            self.storage.generate_update()
+            if self.storage.get_previous_state() == self.storage.get_state():
+                # self.game_over()
+                print(f"No changes, try another move")
+
+            if score_val != -1:
+                self.storage.generate_update()
+                new_score = self.storage.get_score() + score_val
+                self.storage.set_score(new_score)
+
+                if new_score > self.max_score:
+                    self.max_score = new_score
 
 
 # Storage Class
@@ -129,28 +141,29 @@ class Storage:
 class Move:
     @staticmethod
     def left(storage):
-        score = 0   #change in score 
-        valid_move = False #valid if atleast 1 shift operation takes place
-        for i in range(0,4):
-            nullIndex = 0   #first null index from left
-            lastMerge = 0   #index of last merge operation
-            for j in range(0,4):
+        storage.set_previous_state(deepcopy(storage.get_state()))
+        score = 0  # change in score
+        valid_move = False  # valid if atleast 1 shift operation takes place
+        for i in range(0, 4):
+            nullIndex = 0  # first null index from left
+            lastMerge = 0  # index of last merge operation
+            for j in range(0, 4):
                 if storage.state[i][j] != -1:
                     if nullIndex >= 1:
                         # Merge Condition
-                        if storage.state[i][j] == storage.state[i][nullIndex-1] and nullIndex>lastMerge:
+                        if storage.state[i][j] == storage.state[i][nullIndex-1] and nullIndex > lastMerge:
                             storage.state[i][nullIndex-1] *= 2
                             score += 2*storage.state[i][j]
                             lastMerge = nullIndex
                         else:
                             storage.state[i][nullIndex] = storage.state[i][j]
-                            nullIndex+=1
+                            nullIndex += 1
                     else:
                         storage.state[i][nullIndex] = storage.state[i][j]
-                        nullIndex+=1
+                        nullIndex += 1
 
-                    # Condition for tile shifting   
-                    if j!=nullIndex-1:
+                    # Condition for tile shifting
+                    if j != nullIndex-1:
                         storage.state[i][j] = -1
                         valid_move = True
 
@@ -158,58 +171,59 @@ class Move:
 
     @staticmethod
     def up(storage):
-        score = 0   #change in score 
-        valid_move = False #valid if atleast 1 shift operation takes place
-        for i in range(0,4):
-            nullIndex = 0   #first null index from top
-            lastMerge = 0   #index of last merge operation
-            for j in range(0,4):
+        storage.set_previous_state(deepcopy(storage.get_state()))
+        score = 0  # change in score
+        valid_move = False  # valid if atleast 1 shift operation takes place
+        for i in range(0, 4):
+            nullIndex = 0  # first null index from top
+            lastMerge = 0  # index of last merge operation
+            for j in range(0, 4):
                 if storage.state[j][i] != -1:
                     if nullIndex >= 1:
                         # Merge Condition
-                        if storage.state[j][i] == storage.state[nullIndex-1][i] and nullIndex>lastMerge:
+                        if storage.state[j][i] == storage.state[nullIndex-1][i] and nullIndex > lastMerge:
                             storage.state[nullIndex-1][i] *= 2
                             score += 2*storage.state[j][i]
                             lastMerge = nullIndex
                         else:
                             storage.state[nullIndex][i] = storage.state[j][i]
-                            nullIndex+=1
+                            nullIndex += 1
                     else:
                         storage.state[nullIndex][i] = storage.state[j][i]
-                        nullIndex+=1
+                        nullIndex += 1
 
-                    # Condition for tile shifting   
-                    if j!=nullIndex-1:
+                    # Condition for tile shifting
+                    if j != nullIndex-1:
                         storage.state[j][i] = -1
                         valid_move = True
 
         return score if valid_move else -1
-        
 
     @staticmethod
     def right(storage):
-        score = 0   #change in score 
-        valid_move = False  #valid if atleast 1 shift operation takes place
-        for i in range(0,4):
-            nullIndex = 3   #first null index from right
-            lastMerge = 3   #index of last merge operation
-            for j in reversed(range(0,4)):
+        storage.set_previous_state(deepcopy(storage.get_state()))
+        score = 0  # change in score
+        valid_move = False  # valid if atleast 1 shift operation takes place
+        for i in range(0, 4):
+            nullIndex = 3  # first null index from right
+            lastMerge = 3  # index of last merge operation
+            for j in reversed(range(0, 4)):
                 if storage.state[i][j] != -1:
                     if nullIndex <= 2:
                         # Merge Condition
-                        if storage.state[i][j] == storage.state[i][nullIndex+1] and nullIndex<lastMerge:
+                        if storage.state[i][j] == storage.state[i][nullIndex+1] and nullIndex < lastMerge:
                             storage.state[i][nullIndex+1] *= 2
                             score += 2*storage.state[i][j]
                             lastMerge = nullIndex
                         else:
                             storage.state[i][nullIndex] = storage.state[i][j]
-                            nullIndex-=1
+                            nullIndex -= 1
                     else:
                         storage.state[i][nullIndex] = storage.state[i][j]
-                        nullIndex-=1
+                        nullIndex -= 1
 
-                    # If tiles were shifted mark original positions as -1   
-                    if j!=nullIndex+1:
+                    # If tiles were shifted mark original positions as -1
+                    if j != nullIndex+1:
                         storage.state[i][j] = -1
                         valid_move = True
 
@@ -217,28 +231,29 @@ class Move:
 
     @staticmethod
     def down(storage):
-        score = 0   #change in score 
-        valid_move = False #valid if atleast 1 shift operation takes place
-        for i in range(0,4):
-            nullIndex = 3   #first null index from bottom
-            lastMerge = 3   #index of last merge operation
-            for j in reversed(range(0,4)):
+        storage.set_previous_state(deepcopy(storage.get_state()))
+        score = 0  # change in score
+        valid_move = False  # valid if atleast 1 shift operation takes place
+        for i in range(0, 4):
+            nullIndex = 3  # first null index from bottom
+            lastMerge = 3  # index of last merge operation
+            for j in reversed(range(0, 4)):
                 if storage.state[j][i] != -1:
                     if nullIndex <= 2:
                         # Merge Condition
-                        if storage.state[j][i] == storage.state[nullIndex+1][i] and nullIndex<lastMerge:
+                        if storage.state[j][i] == storage.state[nullIndex+1][i] and nullIndex < lastMerge:
                             storage.state[nullIndex+1][i] *= 2
                             score += 2*storage.state[j][i]
                             lastMerge = nullIndex
                         else:
                             storage.state[nullIndex][i] = storage.state[j][i]
-                            nullIndex-=1
+                            nullIndex -= 1
                     else:
                         storage.state[nullIndex][i] = storage.state[j][i]
-                        nullIndex-=1
+                        nullIndex -= 1
 
-                    # Condition for tile shifting   
-                    if j!=nullIndex+1:
+                    # Condition for tile shifting
+                    if j != nullIndex+1:
                         storage.state[j][i] = -1
                         valid_move = True
 
