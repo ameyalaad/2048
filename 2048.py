@@ -129,19 +129,120 @@ class Storage:
 class Move:
     @staticmethod
     def left(storage):
-        return
+        score = 0   #change in score 
+        valid_move = False #valid if atleast 1 shift operation takes place
+        for i in range(0,4):
+            nullIndex = 0   #first null index from left
+            lastMerge = 0   #index of last merge operation
+            for j in range(0,4):
+                if storage.state[i][j] != -1:
+                    if nullIndex >= 1:
+                        # Merge Condition
+                        if storage.state[i][j] == storage.state[i][nullIndex-1] and nullIndex>lastMerge:
+                            storage.state[i][nullIndex-1] *= 2
+                            score += 2*storage.state[i][j]
+                            lastMerge = nullIndex
+                        else:
+                            storage.state[i][nullIndex] = storage.state[i][j]
+                            nullIndex+=1
+                    else:
+                        storage.state[i][nullIndex] = storage.state[i][j]
+                        nullIndex+=1
+
+                    # Condition for tile shifting   
+                    if j!=nullIndex-1:
+                        storage.state[i][j] = -1
+                        valid_move = True
+
+        return score if valid_move else -1
 
     @staticmethod
     def up(storage):
-        return
+        score = 0   #change in score 
+        valid_move = False #valid if atleast 1 shift operation takes place
+        for i in range(0,4):
+            nullIndex = 0   #first null index from top
+            lastMerge = 0   #index of last merge operation
+            for j in range(0,4):
+                if storage.state[j][i] != -1:
+                    if nullIndex >= 1:
+                        # Merge Condition
+                        if storage.state[j][i] == storage.state[nullIndex-1][i] and nullIndex>lastMerge:
+                            storage.state[nullIndex-1][i] *= 2
+                            score += 2*storage.state[j][i]
+                            lastMerge = nullIndex
+                        else:
+                            storage.state[nullIndex][i] = storage.state[j][i]
+                            nullIndex+=1
+                    else:
+                        storage.state[nullIndex][i] = storage.state[j][i]
+                        nullIndex+=1
+
+                    # Condition for tile shifting   
+                    if j!=nullIndex-1:
+                        storage.state[j][i] = -1
+                        valid_move = True
+
+        return score if valid_move else -1
+        
 
     @staticmethod
     def right(storage):
-        return
+        score = 0   #change in score 
+        valid_move = False  #valid if atleast 1 shift operation takes place
+        for i in range(0,4):
+            nullIndex = 3   #first null index from right
+            lastMerge = 3   #index of last merge operation
+            for j in reversed(range(0,4)):
+                if storage.state[i][j] != -1:
+                    if nullIndex <= 2:
+                        # Merge Condition
+                        if storage.state[i][j] == storage.state[i][nullIndex+1] and nullIndex<lastMerge:
+                            storage.state[i][nullIndex+1] *= 2
+                            score += 2*storage.state[i][j]
+                            lastMerge = nullIndex
+                        else:
+                            storage.state[i][nullIndex] = storage.state[i][j]
+                            nullIndex-=1
+                    else:
+                        storage.state[i][nullIndex] = storage.state[i][j]
+                        nullIndex-=1
+
+                    # If tiles were shifted mark original positions as -1   
+                    if j!=nullIndex+1:
+                        storage.state[i][j] = -1
+                        valid_move = True
+
+        return score if valid_move else -1
 
     @staticmethod
     def down(storage):
-        return
+        score = 0   #change in score 
+        valid_move = False #valid if atleast 1 shift operation takes place
+        for i in range(0,4):
+            nullIndex = 3   #first null index from bottom
+            lastMerge = 3   #index of last merge operation
+            for j in reversed(range(0,4)):
+                if storage.state[j][i] != -1:
+                    if nullIndex <= 2:
+                        # Merge Condition
+                        if storage.state[j][i] == storage.state[nullIndex+1][i] and nullIndex<lastMerge:
+                            storage.state[nullIndex+1][i] *= 2
+                            score += 2*storage.state[j][i]
+                            lastMerge = nullIndex
+                        else:
+                            storage.state[nullIndex][i] = storage.state[j][i]
+                            nullIndex-=1
+                    else:
+                        storage.state[nullIndex][i] = storage.state[j][i]
+                        nullIndex-=1
+
+                    # Condition for tile shifting   
+                    if j!=nullIndex+1:
+                        storage.state[j][i] = -1
+                        valid_move = True
+
+        return score if valid_move else -1
 
 
 def test():
