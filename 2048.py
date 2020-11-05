@@ -12,11 +12,54 @@ import random
 # init function -> 2x generate random -> update gui/ print current state
 # waitformove -> perform move -> update score -> generate random -> check max score ->update GUI/ print current state
 # checkgameover
+class Game:
+    """The class to keep track of Game sessions"""
+
+    def __init__(self):
+        self.max_score = 0
+        self.storage = None
+        self.moves = ["Up", "Down", "Left", "Right"]
+
+    def new_game(self):
+        self.storage = Storage()
+
+        # Generate two initial tiles
+        self.storage.generate_update()
+        self.storage.generate_update()
+
+        # Print out the state
+        self.storage.show_state()
+
+        self.loop()
+
+    def loop(self):
+        self.game_running = True
+        while self.game_running:
+            print("Do a move: ", self.moves)
+            print("Anything else exits")
+            move = input()
+
+            if move == "Up":
+                Move.up(self.storage)
+            elif move == "Left":
+                Move.left(self.storage)
+            elif move == "Down":
+                Move.down(self.storage)
+            elif move == "Right":
+                Move.right(self.storage)
+            else:
+                self.game_running = False
+                break
+
+            self.storage.generate_update()
+            self.storage.show_state()
 
 # Storage Class
 # current score, state, previous state
 # getstate, getpreviousstate, generaterandom, setpreviousstate, setstate, getscore, setscore
 # generaterandom -> internally updates current state
+
+
 class Storage:
     def __init__(self):
         self.score = 0
@@ -71,13 +114,28 @@ class Storage:
 
 # Move Class
 # left, right, up, down (inputs storage class), undo
+class Move:
+    @staticmethod
+    def left(storage):
+        return
+
+    @staticmethod
+    def up(storage):
+        return
+
+    @staticmethod
+    def right(storage):
+        return
+
+    @staticmethod
+    def down(storage):
+        return
+
 
 def test():
     # Use this for your testing purposes
-    storage = Storage()
-    storage.generate_update()
-    storage.generate_update()
-    storage.show_state()
+    game = Game()
+    game.new_game()
 
 
 if __name__ == "__main__":
