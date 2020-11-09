@@ -2,11 +2,39 @@
 import random
 import os
 from copy import deepcopy
+import platform
 
 
 # Seeding the random number generator for consistent results
 # random.seed(42)
 
+
+def _find_getch():
+    try:
+        import termios
+    except ImportError:
+        # Non-POSIX. Return msvcrt's (Windows') getch.
+        import msvcrt
+        return msvcrt.getch
+
+    # POSIX system. Create and return a getch that manipulates the tty.
+    import sys
+    import tty
+
+    def _getch():
+        fd = sys.stdin.fileno()
+        old_settings = termios.tcgetattr(fd)
+        try:
+            tty.setraw(fd)
+            ch = sys.stdin.read(1)
+        finally:
+            termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
+        return ch
+
+    return _getch
+
+
+getch = _find_getch()
 
 # Game class
 # max score, Storage class, GUI(if needed)
@@ -14,13 +42,15 @@ from copy import deepcopy
 # init function -> 2x generate random -> update gui/ print current state
 # waitformove -> perform move -> update score -> generate random -> check max score ->update GUI/ print current state
 # checkgameover
+
+
 class Game:
     """The class to keep track of Game sessions"""
 
     def __init__(self):
         self.max_score = 0
         self.storage = None
-        self.moves = ["Up", "Down", "Left", "Right"]
+        self.moves = ["w", "a", "s", "d", "n"]
 
     def new_game(self):
         self.storage = Storage()
@@ -37,33 +67,32 @@ class Game:
     def loop(self):
         self.game_running = True
         while self.game_running:
-            # os.system("cls")
+            os.system('cls' if os.name == 'nt' else 'clear')
             self.storage.show_state()
             print("Do a move: ", self.moves)
             print(f"Anything else exits...\nScore = {self.storage.get_score()}, High Score = {self.max_score}")
-            move = input()
+            move = getch()
 
-            if move == "Up":
+            if move == b'w':
                 score_val = Move.up(self.storage)
-            elif move == "Left":
+            elif move == b'a':
                 score_val = Move.left(self.storage)
-            elif move == "Down":
+            elif move == b"s":
                 score_val = Move.down(self.storage)
-            elif move == "Right":
+            elif move == b"d":
                 score_val = Move.right(self.storage)
-            elif move == "newgame":
+            elif move == b"n":
                 self.new_game()
             else:
                 self.game_running = False
                 break
 
             # TODO: Implement Undo functionality
-            # TODO: Implement newgame functionality
-
-            if score_val == -1 :
+            # TODO: Possible combinations
+            if score_val == -1:
                 print(f"No changes, try another move")
 
-            else :
+            else:
                 self.storage.generate_update()
                 new_score = self.storage.get_score() + score_val
                 self.storage.set_score(new_score)
@@ -72,8 +101,8 @@ class Game:
                     self.max_score = new_score
 
             if self.check_game_over():
-                #TODO : Implement endgame
-                pass                
+                # TODO : Implement endgame
+                pass
 
     def check_game_over(self):
         if self.storage.max_tile == 2048:
@@ -82,7 +111,7 @@ class Game:
         if self.storage.num_empty_tiles == 0:
             print("Game Over :(")
             return True
-        return False            
+        return False
 
 
 # Storage Class
@@ -110,7 +139,7 @@ class Storage:
         return self.max_tile
 
     def set_max_tile(self, new_max_tile):
-        self.max_tile = new_max_tile    
+        self.max_tile = new_max_tile
 
     def get_previous_state(self):
         return self.previous_state
@@ -124,21 +153,21 @@ class Storage:
     def set_score(self, new_score):
         self.score = new_score
 
-    def get_num_empty_tiles(self):    
+    def get_num_empty_tiles(self):
         return self.num_empty_tiles
 
     def increament_empty_tiles(self):
         self.num_empty_tiles += 1
 
     def decreament_empty_tiles(self):
-        self.num_empty_tiles -= 1        
+        self.num_empty_tiles -= 1
 
     def generate_update(self):
         """
         Generates a tile in a random location, with a number 2 or 4. Directly updates the state.
         """
-        # Generate a tile value
-        tile_value = 2 * random.randint(1, 2)
+        # Generate a tile value (90% chance of 2)
+        tile_value = random.choice([2, 2, 2, 2, 2, 2, 2, 2, 2, 4])
 
         # Get -1 elements as indices
         random_empty_tile = random.randint(1, self.get_num_empty_tiles())
@@ -146,7 +175,7 @@ class Storage:
         for i in range(4):
             for j in range(4):
                 if self.state[i][j] == -1:
-                    random_empty_tile-=1
+                    random_empty_tile -= 1
                 if random_empty_tile == 0:
                     self.state[i][j] = tile_value
                     self.decreament_empty_tiles()
@@ -158,10 +187,13 @@ class Storage:
 
     def show_state(self):
         """Helper function to pretty-print the state"""
-        print(self.state[0])
-        print(self.state[1])
-        print(self.state[2])
-        print(self.state[3])
+        for i in self.state:
+            for j in i:
+                if j == -1:
+                    print("_\t", end="")
+                else:
+                    print(f"{j}\t", end="")
+            print()
 
 
 # Move Class
