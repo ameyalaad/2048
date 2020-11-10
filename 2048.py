@@ -102,15 +102,37 @@ class Game:
 
             if self.check_game_over():
                 # TODO : Implement endgame
-                pass
+                print("Press 'n' for a new game, Anything else to exit")
+                move = getch()
+                if move == b'n':
+                    self.new_game()
+                else:
+                    self.game_running = False
+                    break    
 
     def check_game_over(self):
         if self.storage.max_tile == 2048:
             print(f"Congratulations!! You Won!\nScore = {self.storage.get_score()}, High Score = {self.max_score}")
             return True
         if self.storage.num_empty_tiles == 0:
+            # checking for merging tiles
+            # temporary soln until lookahead is implemented
+            for i in range(3): 
+                for j in range(3): 
+                    if(self.storage.state[i][j]== self.storage.state[i + 1][j] or self.storage.state[i][j]== self.storage.state[i][j + 1]): 
+                        return False
+
+            for j in range(3): 
+                if(self.storage.state[3][j]== self.storage.state[3][j + 1]): 
+                    return False
+        
+            for i in range(3): 
+                if(self.storage.state[i][3]== self.storage.state[i + 1][3]): 
+                    return False
+
             print("Game Over :(")
             return True
+
         return False
 
 
