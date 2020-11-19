@@ -59,39 +59,38 @@ class Game:
         self.storage.generate_update()
         self.storage.generate_update()
 
-        # Print out the state
-        self.storage.show_state()
+        # Clean the screen
+        os.system('cls' if os.name == 'nt' else 'clear')
 
         self.loop()
 
     def loop(self):
         self.game_running = True
         while self.game_running:
-            os.system('cls' if os.name == 'nt' else 'clear')
-            self.storage.show_state()
             print("Do a move: ", self.moves)
             print(f"Anything else exits...\nScore = {self.storage.get_score()}, High Score = {self.max_score}")
-            move = getch()
 
             # fetch the possible outcomes before hand
             scores = self.storage.generate_moves()
             score_val = -1
+            self.storage.show_state()
+            move = getch()
 
-            #set the current state based on user input
+            # set the current state based on user input
             if move == b'w':
-                if scores[0]!=-1:
+                if scores[0] != -1:
                     self.storage.set_state(self.storage.get_up_state())
                     score_val = scores[0]
             elif move == b'a':
-                if scores[1]!=-1:
+                if scores[1] != -1:
                     self.storage.set_state(self.storage.get_left_state())
                     score_val = scores[1]
             elif move == b"s":
-                if scores[2]!=-1:
+                if scores[2] != -1:
                     self.storage.set_state(self.storage.get_down_state())
                     score_val = scores[2]
             elif move == b"d":
-                if scores[3]!=-1:
+                if scores[3] != -1:
                     self.storage.set_state(self.storage.get_right_state())
                     score_val = scores[3]
             elif move == b"n":
@@ -102,6 +101,8 @@ class Game:
 
             # TODO: Implement Undo functionality
             # TODO: Possible combinations
+
+            os.system('cls' if os.name == 'nt' else 'clear')
 
             if score_val == -1:
                 print(f"No changes, try another move")
@@ -121,7 +122,7 @@ class Game:
                     self.new_game()
                 else:
                     self.game_running = False
-                    break    
+                    break
 
     def check_game_over(self):
         if max(self.storage.get_state()) == 2048:
@@ -137,17 +138,17 @@ class Game:
         if num_empty_tiles == 0:
             # checking for merging tiles
             # temporary soln until lookahead is implemented
-            for i in range(3): 
-                for j in range(3): 
-                    if(self.storage.state[i][j]== self.storage.state[i + 1][j] or self.storage.state[i][j]== self.storage.state[i][j + 1]): 
+            for i in range(3):
+                for j in range(3):
+                    if(self.storage.state[i][j] == self.storage.state[i + 1][j] or self.storage.state[i][j] == self.storage.state[i][j + 1]):
                         return False
 
-            for j in range(3): 
-                if(self.storage.state[3][j]== self.storage.state[3][j + 1]): 
+            for j in range(3):
+                if(self.storage.state[3][j] == self.storage.state[3][j + 1]):
                     return False
-        
-            for i in range(3): 
-                if(self.storage.state[i][3]== self.storage.state[i + 1][3]): 
+
+            for i in range(3):
+                if(self.storage.state[i][3] == self.storage.state[i + 1][3]):
                     return False
 
             os.system('cls' if os.name == 'nt' else 'clear')
@@ -175,6 +176,7 @@ class Storage:
         self.right_state = None
         self.up_state = None
         self.down_state = None
+        self.move_scores = None
 
     def get_state(self):
         return self.state
@@ -198,7 +200,7 @@ class Storage:
         return self.right_state
 
     def set_right_state(self, new_right_state):
-        self.right_state = new_right_state   
+        self.right_state = new_right_state
 
     def get_up_state(self):
         return self.up_state
@@ -210,13 +212,16 @@ class Storage:
         return self.down_state
 
     def set_down_state(self, new_down_state):
-        self.down_state = new_down_state             
+        self.down_state = new_down_state
 
     def get_score(self):
         return self.score
 
     def set_score(self, new_score):
         self.score = new_score
+
+    def set_move_scores(self, scores):
+        self.move_scores = scores
 
     def generate_update(self):
         """
@@ -237,10 +242,10 @@ class Storage:
         except IndexError as error:
             print("No empty tiles available. Game should now end")
             # Implement move, will check the previous state comparision then
-            
+
             return
 
-        self.state[location//4][location % 4] = tile_value       
+        self.state[location//4][location % 4] = tile_value
         # print(self.state)
 
     def generate_moves(self):
@@ -261,17 +266,64 @@ class Storage:
 
         scores[3], new_state = Move.right(current_state)
         self.set_right_state(new_state)
-        return scores    
+
+        self.move_scores = scores
+        return scores
 
     def show_state(self):
-        """Helper function to pretty-print the state"""
-        for i in self.state:
+        """Helper function to pretty-print the possible states"""
+        # Move up
+        for i in self.up_state:
+            print("\t"*5, end="")
             for j in i:
                 if j == -1:
                     print("_\t", end="")
                 else:
                     print(f"{j}\t", end="")
             print()
+
+        print(f"\t\t\t\t\t\tUp score: {self.score + (0 if self.move_scores[0] == -1 else self.move_scores[0])}")
+
+        print()
+
+        # Move left, current state, right state
+        for left, curr, right in zip(self.left_state, self.state, self.right_state):
+            # print left
+            for j in left:
+                if j == -1:
+                    print("_\t", end="")
+                else:
+                    print(f"{j}\t", end="")
+            print("\t", end="")
+            for j in curr:
+                if j == -1:
+                    print("_\t", end="")
+                else:
+                    print(f"{j}\t", end="")
+            print("\t", end="")
+            for j in right:
+                if j == -1:
+                    print("_\t", end="")
+                else:
+                    print(f"{j}\t", end="")
+            print()
+
+        print(
+            f"\tLeft Score: {self.score + (0 if self.move_scores[1] == -1 else self.move_scores[1])}\t\t\t\tScore: {self.score}\t\t\tRight Score: {self.score + (0 if self.move_scores[3] == -1 else self.move_scores[3])}")
+
+        print()
+
+        # Move down
+        for i in self.down_state:
+            print("\t"*5, end="")
+            for j in i:
+                if j == -1:
+                    print("_\t", end="")
+                else:
+                    print(f"{j}\t", end="")
+            print()
+
+        print(f"\t\t\t\t\t\tDown score: {self.score + (0 if self.move_scores[2] == -1 else self.move_scores[2])}")
 
 
 # Move Class
@@ -286,11 +338,11 @@ class Move:
         return (new_score if valid_move else -1), new_state
 
     @staticmethod
-    def right(state): 
+    def right(state):
         """ mirror -> left move """
         current_state = deepcopy(state)
         current_state = Move.mirror(current_state)
-        valid_move, new_score, new_state =  Move.move_left(current_state)
+        valid_move, new_score, new_state = Move.move_left(current_state)
         new_state = Move.mirror(new_state)
         return (new_score if valid_move else -1), new_state
 
@@ -316,7 +368,7 @@ class Move:
 
     @staticmethod
     def move_left(current_state):
-        new_state = [[-1]*4 for _ in range(4)]       
+        new_state = [[-1]*4 for _ in range(4)]
         score = 0  # change in score
         valid_move = False  # valid if atleast 1 shift operation takes place
 
@@ -340,22 +392,22 @@ class Move:
                     if j != nullIndex-1:
                         valid_move = True
 
-        return valid_move, score, new_state    
+        return valid_move, score, new_state
 
     @staticmethod
     def mirror(state):
         for i in range(4):
-            state[i][0],state[i][3] = state[i][3], state[i][0]
-            state[i][1],state[i][2] = state[i][2], state[i][1]
-        return state    
-              
+            state[i][0], state[i][3] = state[i][3], state[i][0]
+            state[i][1], state[i][2] = state[i][2], state[i][1]
+        return state
+
     @staticmethod
     def transpose(state):
-        new_mat = [] 
+        new_mat = []
         for i in range(4):
-            for j in range(i,4):
+            for j in range(i, 4):
                 state[i][j], state[j][i] = state[j][i], state[i][j]
-        return state                                
+        return state
 
 
 def test():
