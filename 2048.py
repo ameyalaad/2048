@@ -153,8 +153,11 @@ class Game:
 
             os.system('cls' if os.name == 'nt' else 'clear')
             print("Game Over :(")
+            print("Current state:")
 
-            self.storage.show_state()
+            self.storage.show_current_state()
+
+            print(f"Your Score: {self.storage.get_score()}\nHigh Score: {self.max_score}")
             return True
 
         return False
@@ -270,6 +273,16 @@ class Storage:
         self.move_scores = scores
         return scores
 
+    def show_current_state(self):
+        for i in self.state:
+            print("\t"*5, end="")
+            for j in i:
+                if j == -1:
+                    print("_\t", end="")
+                else:
+                    print(f"{j}\t", end="")
+            print()
+
     def show_state(self):
         """Helper function to pretty-print the possible states"""
         # Move up
@@ -308,8 +321,9 @@ class Storage:
                     print(f"{j}\t", end="")
             print()
 
+        tab_ = '\t' if (self.score + (0 if self.move_scores[1] == -1 else self.move_scores[1])) < 1000 else ""
         print(
-            f"\tLeft Score: {self.score + (0 if self.move_scores[1] == -1 else self.move_scores[1])}\t\t\t\tScore: {self.score}\t\t\tRight Score: {self.score + (0 if self.move_scores[3] == -1 else self.move_scores[3])}")
+            f"\tLeft Score: {self.score + (0 if self.move_scores[1] == -1 else self.move_scores[1])}{tab_}\t\t\tScore: {self.score}\t\t\t\tRight Score: {self.score + (0 if self.move_scores[3] == -1 else self.move_scores[3])}")
 
         print()
 
