@@ -79,24 +79,29 @@ class Game:
             # set the current state based on user input
             if move == b'w':
                 if scores[0] != -1:
-                    self.storage.set_state(self.storage.get_up_state())
+                    self.storage.set_previous_state(self.storage.get_state())
+                    self.storage.set_state(self.storage.get_move_state(0))
                     score_val = scores[0]
             elif move == b'a':
                 if scores[1] != -1:
-                    self.storage.set_state(self.storage.get_left_state())
+                    self.storage.set_previous_state(self.storage.get_state())
+                    self.storage.set_state(self.storage.get_move_state(1))
                     score_val = scores[1]
             elif move == b"s":
                 if scores[2] != -1:
-                    self.storage.set_state(self.storage.get_down_state())
+                    self.storage.set_previous_state(self.storage.get_state())
+                    self.storage.set_state(self.storage.get_move_state(2))
                     score_val = scores[2]
             elif move == b"d":
                 if scores[3] != -1:
-                    self.storage.set_state(self.storage.get_right_state())
+                    self.storage.set_previous_state(self.storage.get_state())
+                    self.storage.set_state(self.storage.get_move_state(3))
                     score_val = scores[3]
             elif move == b"n":
                 self.new_game()
             else:
                 self.game_running = False
+                print("Exiting...")
                 break
 
             # TODO: Implement Undo functionality
@@ -138,6 +143,7 @@ class Game:
         if num_empty_tiles == 0:
             # checking for merging tiles
             # temporary soln until lookahead is implemented
+            # generate moves again and check if all moves_scores = -1?
             for i in range(3):
                 for j in range(3):
                     if(self.storage.state[i][j] == self.storage.state[i + 1][j] or self.storage.state[i][j] == self.storage.state[i][j + 1]):
@@ -164,8 +170,8 @@ class Game:
 
 
 # Storage Class
-# current score, state, previous state, max_tile, num_empty_tiles
-# getstate, getpreviousstate, generaterandom, setpreviousstate, setstate, getscore, setscore, get_max_tile, set_max_tile
+# current score, state, previous state, move_states, move_scores
+# getstate, getpreviousstate, generaterandom, setpreviousstate, setstate, getscore, setscore
 # get_num_empty_tiles, increament_empty_tiles, decreament_empty_tiles
 # generate_update -> internally updates current state
 
@@ -175,10 +181,7 @@ class Storage:
         self.score = 0
         self.state = [[-1 for _ in range(4)] for _ in range(4)]
         self.previous_state = None
-        self.left_state = None
-        self.right_state = None
-        self.up_state = None
-        self.down_state = None
+        self.move_states = [None]*4
         self.move_scores = None
 
     def get_state(self):
@@ -193,29 +196,11 @@ class Storage:
     def set_previous_state(self, new_previous_state):
         self.previous_state = new_previous_state
 
-    def get_left_state(self):
-        return self.left_state
+    def get_move_state(self, move):
+        return self.move_states[move]
 
-    def set_left_state(self, new_left_state):
-        self.left_state = new_left_state
-
-    def get_right_state(self):
-        return self.right_state
-
-    def set_right_state(self, new_right_state):
-        self.right_state = new_right_state
-
-    def get_up_state(self):
-        return self.up_state
-
-    def set_up_state(self, new_up_state):
-        self.up_state = new_up_state
-
-    def get_down_state(self):
-        return self.down_state
-
-    def set_down_state(self, new_down_state):
-        self.down_state = new_down_state
+    def set_move_state(self, move, new_state):
+        self.move_states[move] = new_state        
 
     def get_score(self):
         return self.score
@@ -259,16 +244,16 @@ class Storage:
         current_state = self.get_state()
 
         scores[0], new_state = Move.up(current_state)
-        self.set_up_state(new_state)
+        self.set_move_state(0, new_state)
 
         scores[1], new_state = Move.left(current_state)
-        self.set_left_state(new_state)
+        self.set_move_state(1, new_state)
 
         scores[2], new_state = Move.down(current_state)
-        self.set_down_state(new_state)
+        self.set_move_state(2, new_state)
 
         scores[3], new_state = Move.right(current_state)
-        self.set_right_state(new_state)
+        self.set_move_state(3, new_state)
 
         self.move_scores = scores
         return scores
@@ -286,7 +271,7 @@ class Storage:
     def show_state(self):
         """Helper function to pretty-print the possible states"""
         # Move up
-        for i in self.up_state:
+        for i in self.get_move_state(0):
             print("\t"*5, end="")
             for j in i:
                 if j == -1:
@@ -300,7 +285,7 @@ class Storage:
         print()
 
         # Move left, current state, right state
-        for left, curr, right in zip(self.left_state, self.state, self.right_state):
+        for left, curr, right in zip(self.get_move_state(1), self.state, self.get_move_state(3)):
             # print left
             for j in left:
                 if j == -1:
@@ -328,7 +313,7 @@ class Storage:
         print()
 
         # Move down
-        for i in self.down_state:
+        for i in self.get_move_state(2):
             print("\t"*5, end="")
             for j in i:
                 if j == -1:
@@ -411,13 +396,12 @@ class Move:
     @staticmethod
     def mirror(state):
         for i in range(4):
-            state[i][0], state[i][3] = state[i][3], state[i][0]
-            state[i][1], state[i][2] = state[i][2], state[i][1]
+            for j in range(2):
+                state[i][j], state[i][3-j] = state[i][3-j], state[i][j]
         return state
 
     @staticmethod
     def transpose(state):
-        new_mat = []
         for i in range(4):
             for j in range(i, 4):
                 state[i][j], state[j][i] = state[j][i], state[i][j]
