@@ -24,7 +24,7 @@ class Storage:
         self._previous_states.append((state, score))
 
     def pop_previous_state(self):
-        return self._previous_states.pop()
+        return self._previous_states.pop()   
 
     def get_move_state(self, move):
         return self._move_states[move]

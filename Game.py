@@ -150,8 +150,10 @@ class Game:
             self.storage.set_score(new_score)
             if new_score > self.max_score:
                 self.max_score = new_score
+            print(f"Move: {move}")
             self.storage.show_current_state()
-            print()
+            print(f"Sum = {self.get_sum()}, Max attainable tile = {self.get_max_tiles_attainable()}")
+            print("*************************************************************************")
 
 
 def _find_getch():
