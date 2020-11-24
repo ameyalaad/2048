@@ -29,7 +29,6 @@ class Game:
         self.storage.show_current_state()
         print()
 
-
     def interactive(self):
         """
         Used to start a user-controlled interactive loop
@@ -109,6 +108,12 @@ class Game:
     def get_sum(self):
         return self.storage.get_sum_tiles()
 
+    def get_max_tiles(self):
+        return self.storage.get_max_tiles()
+
+    def get_max_tiles_attainable(self):
+        return self.storage.get_max_tiles_attainable()
+
     # The following methods may be used by an AI agent to manipulate the Game
     def play_move(self, move):
         # fetch the possible outcomes before hand
@@ -134,7 +139,7 @@ class Game:
                 self.storage.push_previous_state(self.storage.get_state(), self.storage.get_score())
                 self.storage.set_state(self.storage.get_move_state(3))
                 score_val = scores[3]
-        elif move == 'undo':        
+        elif move == 'undo':
             prev_state, prev_score = self.storage.pop_previous_state()
             self.storage.set_state(prev_state)
             self.storage.set_score(prev_score)
@@ -146,7 +151,7 @@ class Game:
             if new_score > self.max_score:
                 self.max_score = new_score
             self.storage.show_current_state()
-            print()    
+            print()
 
 
 def _find_getch():
