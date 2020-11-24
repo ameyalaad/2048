@@ -42,7 +42,12 @@ class Storage:
         self._move_scores = scores
 
     def get_sum_tiles(self):
-        return sum([sum(x) for x in self._state])
+        _sum = 0
+        for x in self._state:
+            for j in x:
+                if j>0:
+                    _sum += j
+        return _sum            
 
     def get_max_tiles(self):
         return max([max(x) for x in self._state])

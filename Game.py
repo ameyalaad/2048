@@ -25,6 +25,10 @@ class Game:
 
         # Clean the screen
         os.system('cls' if os.name == 'nt' else 'clear')
+        print("Initializing Board....")
+        self.storage.show_current_state()
+        print()
+
 
     def interactive(self):
         """
@@ -102,7 +106,47 @@ class Game:
     def check_game_over(self):
         return self.storage.check_game_over()
 
+    def get_sum(self):
+        return self.storage.get_sum_tiles()
+
     # The following methods may be used by an AI agent to manipulate the Game
+    def play_move(self, move):
+        # fetch the possible outcomes before hand
+        scores = self.storage.generate_moves()
+        score_val = -1
+        if move == 'up':
+            if scores[0] != -1:
+                self.storage.push_previous_state(self.storage.get_state(), self.storage.get_score())
+                self.storage.set_state(self.storage.get_move_state(0))
+                score_val = scores[0]
+        elif move == 'left':
+            if scores[1] != -1:
+                self.storage.push_previous_state(self.storage.get_state(), self.storage.get_score())
+                self.storage.set_state(self.storage.get_move_state(1))
+                score_val = scores[1]
+        elif move == 'down':
+            if scores[2] != -1:
+                self.storage.push_previous_state(self.storage.get_state(), self.storage.get_score())
+                self.storage.set_state(self.storage.get_move_state(2))
+                score_val = scores[2]
+        elif move == 'right':
+            if scores[3] != -1:
+                self.storage.push_previous_state(self.storage.get_state(), self.storage.get_score())
+                self.storage.set_state(self.storage.get_move_state(3))
+                score_val = scores[3]
+        elif move == 'undo':        
+            prev_state, prev_score = self.storage.pop_previous_state()
+            self.storage.set_state(prev_state)
+            self.storage.set_score(prev_score)
+
+        if score_val != -1:
+            self.storage.generate_update()
+            new_score = self.storage.get_score() + score_val
+            self.storage.set_score(new_score)
+            if new_score > self.max_score:
+                self.max_score = new_score
+            self.storage.show_current_state()
+            print()    
 
 
 def _find_getch():
